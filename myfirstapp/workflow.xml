@@ -1,0 +1,82 @@
+<workflow-app name="myfirstapp_wf" xmlns="uri:oozie:workflow:0.5">
+<start to="load_mysql_tables"/>
+<fork name="load_mysql_tables">
+   <path start="sqoop_job_ord"/>
+   <path start="sqoop_job_ord_item"/>
+</fork>
+<action name="sqoop_job_ord">
+   <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+	<job-tracker>${jobTracker}</job-tracker>
+	<name-node>${nameNode}</name-node>
+	<prepare>
+        	<delete path="${nameNode}/user/skamalj/oozie_test/orders"/>
+	</prepare>
+        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table orders --as-avrodatafile --compression-codec snappy --target-dir /user/skamalj/oozie_test/orders</command>
+   </sqoop>
+   <ok to="join_table_forks"/>
+   <error to="join_table_forks"/>
+</action>
+<action name="sqoop_job_ord_item">
+   <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+	<job-tracker>${jobTracker}</job-tracker>
+	<name-node>${nameNode}</name-node>
+	<prepare>
+        	<delete path="/user/skamalj/oozie_test/order-items"/>
+	</prepare>
+        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table order_items --as-avrodatafile --compression-codec snappy --target-dir /user/skamalj/oozie_test/order-items</command>
+   </sqoop>
+   <ok to="join_table_forks"/>
+   <error to="join_table_forks"/>
+</action>
+<join name="join_table_forks" to="process_data"/>
+<fork name="process_data">
+   <path start="order_spark_action"/>
+   <path start="create_hivetable_action"/>
+</fork>
+<action name="order_spark_action">
+	<spark xmlns="uri:oozie:spark-action:0.2">
+		<job-tracker>${jobTracker}</job-tracker>
+		<name-node>${nameNode}</name-node>
+		<prepare>
+			<delete path="/user/skamalj/oozie_test/resultdf_text"/>
+			<delete path="/user/skamalj/oozie_test/resultdf_parquet_gzip"/>
+			<delete path="/user/skamalj/oozie_test/resultdf_parquet_snappy"/>
+		</prepare>
+		<master>yarn-client</master>
+		<mode>client</mode>
+		<name>order-orderitems-spark-job</name>
+		<jar>order_spark.py</jar>
+		<file>/user/skamalj/learn-oozie/myfirstapp/lib/order_spark.py#order_spark.py</file>
+	</spark>
+	<ok to="join_process_data"/>
+	<error to="join_process_data"/>
+</action>
+<action name="create_hivetable_action">
+	<hive2 xmlns="uri:oozie:hive2-action:0.2">
+		<job-tracker>${jobTracker}</job-tracker>
+		<name-node>${nameNode}</name-node>
+		<jdbc-url>jdbc:hive2://cloudera-master:10000/default</jdbc-url>
+		<script>/user/skamalj/learn-oozie/myfirstapp/lib/create_table.hql</script>
+	</hive2>
+	<ok to="join_process_data"/>
+	<error to="join_process_data"/>
+</action>
+<join name="join_process_data" to="load_hivedata_action"/>
+<action name="load_hivedata_action">
+	<pig>
+		<job-tracker>${jobTracker}</job-tracker>
+		<name-node>${nameNode}</name-node>
+		<configuration>
+			<property>
+				<name>oozie.action.sharelib.for.pig</name>
+				<value>pig,hcatalog</value>
+			</property>
+		</configuration>
+		<script>/user/skamalj/learn-oozie/myfirstapp/lib/load_data_pig.sh</script>
+		<file>/user/skamalj/hive-site.xml#hive-site.xml</file>
+	</pig>
+	<ok to="end"/>
+	<error to="end"/>
+</action>
+<end name="end"/>
+</workflow-app>

@@ -1,0 +1,24 @@
+<workflow-app name="pigaction-wf" xmlns="uri:oozie:workflow:0.5">
+<start to="mypigjob"/>
+<action name="mypigjob">
+  <pig>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+    <prepare>
+      <delete path="${nameNode}/user/skamalj/learn-oozie/coord_output/${table}"/>
+    </prepare>
+	<configuration>
+		<property>
+			<name>oozie.action.sharelib.for.pig</name>
+			<value>pig,hcatalog</value>
+		</property>
+	</configuration>
+    <script>/user/skamalj/learn-oozie/coord_job/lib/loadhivedata.pig</script>
+    <param>table=${table}</param>
+    <file>/user/skamalj/hive-site.xml#hive-site.xml</file>
+  </pig>
+  <ok to="end"/>
+  <error to="end"/>
+</action>
+<end name="end"/>
+</workflow-app>

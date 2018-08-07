@@ -1,0 +1,37 @@
+<coordinator-app name="myfirstcoordapp" frequency="${coord:days(2)}" 
+                      start="2018-06-10T00:00Z" end="2018-06-20T12:00Z" 
+                      timezone="UTC" xmlns="uri:oozie:coordinator:0.1">
+  <controls>
+    <concurrency>1</concurrency>
+  </controls>
+  <datasets>
+    <dataset name="trigger_hiveload" frequency="${coord:days(1)}" initial-instance="2018-06-10T00:00Z" timezone="UTC">
+      <uri-template>hdfs://cloudera-master.c.liquid-streamer-210518.internal:8020/user/skamalj/learn-oozie/coord_input/${YEAR}-${MONTH}-${DAY}</uri-template>
+    </dataset>
+  </datasets>
+  <input-events>
+    <data-in name="datatrigger" dataset="trigger_hiveload">
+      <start-instance>${coord:current(-1)}</start-instance>
+      <end-instance>${coord:current(0)}</end-instance>
+    </data-in>
+  </input-events>
+  <action>
+    <workflow>
+      <app-path>hdfs://cloudera-master.c.liquid-streamer-210518.internal:8020/user/skamalj/learn-oozie/coord_job</app-path>
+      <configuration>
+        <property>
+          <name>nameNode</name>
+          <value>${nameNode}</value>
+        </property>
+        <property>
+          <name>jobTracker</name>
+          <value>${jobTracker}</value>
+        </property>
+        <property>
+          <name>table</name>
+          <value>${table}</value>
+        </property>
+      </configuration>
+    </workflow>
+  </action>
+</coordinator-app>
