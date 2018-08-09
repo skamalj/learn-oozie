@@ -9,9 +9,9 @@
 	<job-tracker>${jobTracker}</job-tracker>
 	<name-node>${nameNode}</name-node>
 	<prepare>
-        	<delete path="${nameNode}/user/skamalj/oozie_test/orders"/>
+        	<delete path="${job_root_dir}/sqoop/orders"/>
 	</prepare>
-        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table orders --as-avrodatafile --compression-codec snappy --target-dir /user/skamalj/oozie_test/orders</command>
+        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table orders --as-avrodatafile --compression-codec snappy --target-dir ${job_root_dir}/sqoop/orders</command>
    </sqoop>
    <ok to="join_table_forks"/>
    <error to="join_table_forks"/>
@@ -21,9 +21,9 @@
 	<job-tracker>${jobTracker}</job-tracker>
 	<name-node>${nameNode}</name-node>
 	<prepare>
-        	<delete path="/user/skamalj/oozie_test/order-items"/>
+        	<delete path="${job_root_dir}/sqoop/order-items"/>
 	</prepare>
-        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table order_items --as-avrodatafile --compression-codec snappy --target-dir /user/skamalj/oozie_test/order-items</command>
+        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table order_items --as-avrodatafile --compression-codec snappy --target-dir ${job_root_dir}/sqoop/order-items</command>
    </sqoop>
    <ok to="join_table_forks"/>
    <error to="join_table_forks"/>
@@ -38,14 +38,15 @@
 		<job-tracker>${jobTracker}</job-tracker>
 		<name-node>${nameNode}</name-node>
 		<prepare>
-			<delete path="/user/skamalj/oozie_test/resultdf_text"/>
-			<delete path="/user/skamalj/oozie_test/resultdf_parquet_gzip"/>
-			<delete path="/user/skamalj/oozie_test/resultdf_parquet_snappy"/>
+			<delete path="${job_root_dir}/spark/resultdf_text"/>
+			<delete path="${job_root_dir}/spark/resultdf_parquet_gzip"/>
+			<delete path="${job_root_dir}/spark/resultdf_parquet_snappy"/>
 		</prepare>
 		<master>yarn-client</master>
 		<mode>client</mode>
 		<name>order-orderitems-spark-job</name>
 		<jar>order_spark.py</jar>
+                <arg>${job_root_dir}/</arg>
 		<file>/user/skamalj/learn-oozie/myfirstapp/lib/order_spark.py#order_spark.py</file>
 	</spark>
 	<ok to="join_process_data"/>
@@ -57,6 +58,7 @@
 		<name-node>${nameNode}</name-node>
 		<jdbc-url>jdbc:hive2://cloudera-master:10000/default</jdbc-url>
 		<script>/user/skamalj/learn-oozie/myfirstapp/lib/create_table.hql</script>
+                <param>job_root_dir=${job_root_dir}/</param>
 	</hive2>
 	<ok to="join_process_data"/>
 	<error to="join_process_data"/>
@@ -73,6 +75,7 @@
 			</property>
 		</configuration>
 		<script>/user/skamalj/learn-oozie/myfirstapp/lib/load_data_pig.sh</script>
+                <param>job_root_dir=${job_root_dir}/</param>
 		<file>/user/skamalj/hive-site.xml#hive-site.xml</file>
 	</pig>
 	<ok to="end"/>
