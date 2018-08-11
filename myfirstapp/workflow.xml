@@ -11,7 +11,7 @@
 	<prepare>
         	<delete path="${job_root_dir}/sqoop/orders"/>
 	</prepare>
-        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table orders --as-avrodatafile --compression-codec snappy --target-dir ${job_root_dir}/sqoop/orders</command>
+        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password xxxxxx --table orders --as-avrodatafile --compression-codec snappy --target-dir ${job_root_dir}/sqoop/orders</command>
    </sqoop>
    <ok to="join_table_forks"/>
    <error to="join_table_forks"/>
@@ -23,7 +23,7 @@
 	<prepare>
         	<delete path="${job_root_dir}/sqoop/order-items"/>
 	</prepare>
-        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password Hp1nvent --table order_items --as-avrodatafile --compression-codec snappy --target-dir ${job_root_dir}/sqoop/order-items</command>
+        <command>import --connect jdbc:mysql://cloudera-master/retail_db --username retail_dba --password xxxxx --table order_items --as-avrodatafile --compression-codec snappy --target-dir ${job_root_dir}/sqoop/order-items</command>
    </sqoop>
    <ok to="join_table_forks"/>
    <error to="join_table_forks"/>
